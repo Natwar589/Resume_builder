@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ResumeData } from '@/lib/resumeTypes';
 import { resumeFonts } from '@/lib/fonts';
 import { ResumeRenderer } from './ResumeRenderer';
@@ -35,10 +35,36 @@ type PageSize = 'A4' | 'Letter' | 'Legal' | 'Executive' | 'A5';
 type MarginSize = 'Standard' | 'Narrow' | 'Wide';
 type FontSizeScale = 'Small' | 'Standard' | 'Large';
 
+// Approximate pixel widths at 96dpi
+const pagePxWidth: Record<PageSize, number> = {
+  A4: 794,       // 210mm
+  Letter: 816,   // 8.5in
+  Legal: 816,    // 8.5in
+  Executive: 696, // 7.25in
+  A5: 559,       // 148mm
+};
+
 export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, templateId, fontId }) => {
   const [pageSize, setPageSize] = useState<PageSize>('A4');
   const [marginSize, setMarginSize] = useState<MarginSize>('Standard');
   const [fontSizeScale, setFontSizeScale] = useState<FontSizeScale>('Standard');
+  const [scale, setScale] = useState(1);
+
+  const outerRef = useRef<HTMLDivElement>(null);
+
+  const recalcScale = useCallback(() => {
+    if (!outerRef.current) return;
+    const available = outerRef.current.offsetWidth - 32; // 16px padding each side
+    const natural = pagePxWidth[pageSize];
+    setScale(available < natural ? available / natural : 1);
+  }, [pageSize]);
+
+  useEffect(() => {
+    recalcScale();
+    const ro = new ResizeObserver(recalcScale);
+    if (outerRef.current) ro.observe(outerRef.current);
+    return () => ro.disconnect();
+  }, [recalcScale]);
 
   const handlePrint = () => window.print();
 
@@ -57,9 +83,10 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, templateId, 
   };
 
   const selectedFont = resumeFonts.find(f => f.id === fontId) || resumeFonts[0];
+  const naturalW = pagePxWidth[pageSize];
 
   return (
-    <div className="flex flex-col h-full bg-app-bg items-center overflow-auto py-8 print:py-0 print:bg-white print:overflow-visible transition-colors duration-300">
+    <div ref={outerRef} className="flex flex-col h-full bg-app-bg items-center overflow-auto py-6 print:py-0 print:bg-white print:overflow-visible transition-colors duration-300 w-full">
       {/* Inject Google Font dynamically */}
       <link href={selectedFont.url} rel="stylesheet" />
 
@@ -80,59 +107,63 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, templateId, 
       </style>
 
       {/* Toolbar */}
-      <div className="mb-5 flex flex-wrap justify-between items-center w-full max-w-[210mm] print:hidden px-4 gap-3">
-        <h2 className="text-xl font-bold text-app-text shrink-0">Live Preview</h2>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <CustomDropdown
-            label="Font Size"
-            options={fontSizeOptions}
-            value={fontSizeScale}
-            onChange={(v) => setFontSizeScale(v as FontSizeScale)}
-            icon={<AArrowUp size={14} />}
-            width="w-36"
-          />
-          <CustomDropdown
-            label="Margins"
-            options={marginOptions}
-            value={marginSize}
-            onChange={(v) => setMarginSize(v as MarginSize)}
-            icon={<AlignLeft size={14} />}
-            width="w-36"
-          />
-          <CustomDropdown
-            label="Page Size"
-            options={pageSizeOptions}
-            value={pageSize}
-            onChange={(v) => setPageSize(v as PageSize)}
-            icon={<FileText size={14} />}
-            width="w-36"
-          />
-
+      <div className="mb-4 w-full print:hidden px-3 md:px-4 shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-base md:text-xl font-bold text-app-text">Live Preview</h2>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 bg-app-primary hover:bg-app-primary-hover text-white px-4 py-2 rounded-lg shadow-sm transition-colors text-sm font-semibold shrink-0 h-full"
+            className="flex items-center gap-1.5 bg-app-primary hover:bg-app-primary-hover text-white px-3 py-1.5 rounded-lg shadow-sm transition-colors text-xs md:text-sm font-semibold shrink-0"
           >
-            <Printer size={16} />
-            Print / PDF
+            <Printer size={14} />
+            <span className="hidden sm:inline">Print / </span>PDF
           </button>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <CustomDropdown
+            label="Font Size" options={fontSizeOptions} value={fontSizeScale}
+            onChange={(v) => setFontSizeScale(v as FontSizeScale)}
+            icon={<AArrowUp size={14} />} width="w-32 md:w-36"
+          />
+          <CustomDropdown
+            label="Margins" options={marginOptions} value={marginSize}
+            onChange={(v) => setMarginSize(v as MarginSize)}
+            icon={<AlignLeft size={14} />} width="w-32 md:w-36"
+          />
+          <CustomDropdown
+            label="Page Size" options={pageSizeOptions} value={pageSize}
+            onChange={(v) => setPageSize(v as PageSize)}
+            icon={<FileText size={14} />} width="w-32 md:w-36"
+          />
         </div>
       </div>
 
-      {/* Page Container */}
+      {/* Scaling wrapper — collapses to scaled height so no clipping */}
       <div
-        className="mx-auto text-black shrink-0 flex flex-col page-shadow pb-[24px] print:pb-0"
+        className="print:contents shrink-0"
         style={{
-          width: dimensions[pageSize].width,
-          minHeight: dimensions[pageSize].height,
-          fontFamily: selectedFont.family,
+          width: scale < 1 ? `${naturalW * scale}px` : dimensions[pageSize].width,
+          // When scaled, the element visually takes less height but still reserves full height.
+          // We set height explicitly to the scaled value so the parent scrolls correctly.
         }}
       >
         <div
-          className={`bg-white w-full flex flex-col flex-1 page-mask print:bg-transparent ${fontSizeScale === 'Standard' ? '' : `font-scale-${fontSizeScale.toLowerCase()}`}`}
-          style={{ '--page-padding': marginValues[marginSize] } as React.CSSProperties}
+          className="text-black flex flex-col page-shadow pb-[24px] print:pb-0 print:transform-none origin-top-left"
+          style={{
+            width: dimensions[pageSize].width,
+            minHeight: dimensions[pageSize].height,
+            fontFamily: selectedFont.family,
+            transform: scale < 1 ? `scale(${scale})` : undefined,
+            transformOrigin: 'top left',
+            // Compensate height so parent scroll area matches scaled visual height
+            marginBottom: scale < 1 ? `${(scale - 1) * pagePxWidth[pageSize] * 1.41}px` : undefined,
+          }}
         >
-          <ResumeRenderer data={data} templateId={templateId} />
+          <div
+            className={`bg-white w-full flex flex-col flex-1 page-mask print:bg-transparent ${fontSizeScale === 'Standard' ? '' : `font-scale-${fontSizeScale.toLowerCase()}`}`}
+            style={{ '--page-padding': marginValues[marginSize] } as React.CSSProperties}
+          >
+            <ResumeRenderer data={data} templateId={templateId} />
+          </div>
         </div>
       </div>
     </div>
