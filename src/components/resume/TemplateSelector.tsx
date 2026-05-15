@@ -1,5 +1,7 @@
 import React from 'react';
 import { resumeTemplates } from '@/lib/templates';
+import { CustomDropdown } from '@/components/ui/CustomDropdown';
+import { LayoutTemplate } from 'lucide-react';
 
 interface TemplateSelectorProps {
   selectedTemplateId: string;
@@ -7,23 +9,20 @@ interface TemplateSelectorProps {
 }
 
 export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedTemplateId, onChange }) => {
+  const options = resumeTemplates.map(t => ({
+    value: t.id,
+    label: t.name,
+    description: t.description,
+  }));
+
   return (
-    <div className="flex items-center gap-3">
-      <label htmlFor="template-select" className="font-semibold text-sm text-app-text-muted">
-        Template:
-      </label>
-      <select
-        id="template-select"
-        value={selectedTemplateId}
-        onChange={(e) => onChange(e.target.value)}
-        className="block w-48 rounded-md border-app-border shadow-sm focus:border-app-primary focus:ring-app-primary sm:text-sm p-2 border bg-app-surface text-app-text transition-colors duration-300"
-      >
-        {resumeTemplates.map((template) => (
-          <option key={template.id} value={template.id}>
-            {template.name} - {template.description}
-          </option>
-        ))}
-      </select>
-    </div>
+    <CustomDropdown
+      label="Template"
+      options={options}
+      value={selectedTemplateId}
+      onChange={onChange}
+      icon={<LayoutTemplate size={14} />}
+      width="w-48"
+    />
   );
 };

@@ -9,6 +9,9 @@ import { ProfessionalTemplate } from './templates/ProfessionalTemplate';
 import { ExecutiveTemplate } from './templates/ExecutiveTemplate';
 import { SidebarTemplate } from './templates/SidebarTemplate';
 import { BoldTemplate } from './templates/BoldTemplate';
+import { TimelineTemplate } from './templates/TimelineTemplate';
+import { ElegantTemplate } from './templates/ElegantTemplate';
+import { TechTemplate } from './templates/TechTemplate';
 
 interface ResumeRendererProps {
   data: ResumeData;
@@ -17,6 +20,12 @@ interface ResumeRendererProps {
 
 export const ResumeRenderer: React.FC<ResumeRendererProps> = ({ data, templateId }) => {
   switch (templateId) {
+    case 'timeline':
+      return <TimelineTemplate data={data} />;
+    case 'elegant':
+      return <ElegantTemplate data={data} />;
+    case 'tech':
+      return <TechTemplate data={data} />;
     case 'sidebar':
       return <SidebarTemplate data={data} />;
     case 'bold':

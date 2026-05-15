@@ -11,6 +11,21 @@ export const resumeTemplates: TemplateConfig[] = [
     description: "Ultra-clean layout with maximum whitespace"
   },
   {
+    id: "elegant",
+    name: "Elegant",
+    description: "Centered serif layout with ornamental dividers"
+  },
+  {
+    id: "timeline",
+    name: "Timeline",
+    description: "Single-column with vertical timeline accents"
+  },
+  {
+    id: "tech",
+    name: "Tech",
+    description: "Developer-focused, skills-first dark header"
+  },
+  {
     id: "professional",
     name: "Professional",
     description: "Corporate design with a strong header"
