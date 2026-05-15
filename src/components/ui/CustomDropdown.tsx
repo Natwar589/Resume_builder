@@ -45,19 +45,33 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   // Needed for SSR — portals need the DOM
   useEffect(() => { setMounted(true); }, []);
 
-  // Close on outside click or scroll
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click or scroll — but NOT when scrolling inside the panel
   useEffect(() => {
     if (!open) return;
-    const close = () => setOpen(false);
-    document.addEventListener('mousedown', (e) => {
-      if (!triggerRef.current?.contains(e.target as Node)) close();
-    });
-    window.addEventListener('scroll', close, true); // capture phase catches all scroll containers
-    window.addEventListener('resize', close);
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (
+        !triggerRef.current?.contains(e.target as Node) &&
+        !panelRef.current?.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    const handleScroll = (e: Event) => {
+      // Ignore scroll events that originate inside the dropdown panel
+      if (panelRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', () => setOpen(false));
     return () => {
-      document.removeEventListener('mousedown', close);
-      window.removeEventListener('scroll', close, true);
-      window.removeEventListener('resize', close);
+      document.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('scroll', handleScroll, true);
     };
   }, [open]);
 
@@ -78,6 +92,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   const panel = open && panelPos && mounted ? createPortal(
     <div
+      ref={panelRef}
       className="fixed z-[9999] bg-app-surface border border-app-border rounded-xl shadow-2xl overflow-hidden"
       style={{
         top: panelPos.top !== undefined ? panelPos.top : undefined,
