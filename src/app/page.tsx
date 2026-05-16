@@ -218,7 +218,9 @@ export default function ResumeBuilder() {
         </div>
 
         {/* ── Right Panel: Preview ── */}
-        <div className={`
+        <div
+          id="resume-preview-panel"
+          className={`
           w-full md:w-1/2 h-full print:w-full print:h-auto overflow-y-auto bg-app-bg relative
           ${mobileTab === 'preview' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}
         `}>

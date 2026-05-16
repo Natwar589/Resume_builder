@@ -45,6 +45,14 @@ export const CompactTemplate: React.FC<TemplateProps> = ({ data }) => {
               <ProjectsSection projects={data.projects} />
             </Section>
           )}
+
+          {/* Skills */}
+          {data.skills && data.skills.length > 0 && (
+            <Section title="Skills" className="mb-3" titleClassName="text-sm mb-1 pb-0.5">
+              <SkillsSection skills={data.skills} />
+            </Section>
+          )}
+
         </div>
 
         <div className="col-span-4 space-y-3">
@@ -52,13 +60,6 @@ export const CompactTemplate: React.FC<TemplateProps> = ({ data }) => {
           {data.education && data.education.length > 0 && (
             <Section title="Education" className="mb-3" titleClassName="text-sm mb-1 pb-0.5">
               <EducationSection education={data.education} />
-            </Section>
-          )}
-
-          {/* Skills */}
-          {data.skills && data.skills.length > 0 && (
-            <Section title="Skills" className="mb-3" titleClassName="text-sm mb-1 pb-0.5">
-              <SkillsSection skills={data.skills} />
             </Section>
           )}
 

@@ -72,6 +72,22 @@ body {
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
+  /* Force the resume preview panel to be visible and full-width */
+  #resume-preview-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Remove layout clipping from root containers */
+  body > div,
+  main {
+    overflow: visible !important;
+    height: auto !important;
+  }
 }
 
 /* Font Size Scaling for Resume Preview */
