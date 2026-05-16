@@ -1,7 +1,7 @@
 import { ResumeData } from "./resumeTypes";
 
 export const defaultResumeData: ResumeData = {
-  name: "Natwar Rathor",
+  name: "Natwar Singh Rathor",
   title: "MERN Stack Developer / AI Automation Specialist",
   contact: {
     email: "natwarrathor961@gmail.com",
